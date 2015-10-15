@@ -57,7 +57,7 @@ var context;
 		var hertz;
 		///// YOUR CODE IS HERE /////
 		
-		hertz = Math.pow(2,(midi-69)/2) * 440;
+		hertz = Math.pow(2,(midi-69)/12) * 440;
 		
 		/////////////////////////////
 		return hertz;
@@ -77,34 +77,17 @@ var context;
 		// MIDI scale power
 		var midi_power = new Float32Array(pitch_range_hz.length-1);
       
-      
 		///// YOUR CODE IS HERE /////
-       var waveform = new Float32Array(analyser.frequencyBinCount);
-      analyser.getFloatTimeDomainData(waveform);
+		
+		var idx = new Float32Array(pitch_range.length-1);
+		for (var i=0; i < pitch_range.length-1; i++){
+			idx[i] = Math.floor(pitch_range_hz[i] * 2 * analyser.frequencyBinCount / context.sampleRate);
+		
 
-      var mag = waveform.map(function(num){return Math.sqrt(num * num);});
-    
-     for (var k=0; k < dataArray.length; k++){
-             dataArray[k] = (dataArray[k] + 140)*2;
+			midi_power[i] = Math.pow(10, dataArray[idx[i]]/10);
+			}
+			console.log(midi_power);
 
-     }
-      
-          for (var s=0; s < dataArray.length; s++){
-          for (var t=0; t < pitch_range_hz.length-1; t++){
-            if (dataArray[s] > pitch_range_hz[t] && dataArray[s] < pitch_range_hz[t+1]){
-              midi_power[t] += mag[s];
-            }
-          }
-        }
-      
-      
-        function getFrequencyValue(frequency) {
-  var nyquist = context.sampleRate/2;
-  var index = Math.round(frequency/nyquist * dataArray.length);
-  return dataArray[index];
-}
-      
-      
 		/////////////////////////////
 
 		var barWidth = (WIDTH / midi_power.length);
@@ -160,6 +143,12 @@ var context;
 	    source.stop();
 	  }
 	}	   	
+
+	//NEW FUNCTION
+	function db2pow(db) {
+
+		return Math.pow(10, 0.1*db);
+	}
 	</script>
 </body>
 </html>
