@@ -107,71 +107,61 @@ var context;
 		///// YOUR CODE IS HERE /////
 		
       var sr = context.sampleRate;
-        var bin_frqs = 0;
-        var fftSize = 2048;
-        var pitchLen = pitch_range_hz.length;
-        var comb_filter = new Array(pitchLen);
-        var sum_filter = new Array(pitchLen);
-        var binfrqs = [];
-        var pitchgram = [];
-        var energy = [];
 
-      
-        for (var bin = 0; bin < fftSize/2; bin++){
-          binfrqs[bin] = bin / fftSize *sr;
-        }
-        
-        for (var k = 0; k < pitchLen; k++){
-          comb_filter[k] = binfrqs.map(For_binfrqs);
-          sum_filter[k] = new Array(fftSize/2);
-          sum_filter[k].fill(1);       
-        }
-        
-        for (var bin2 = 0; bin < fftSize/2; bin++){
-          for (var k2 = 0; k2 < pitchLen; k2++){
-            if (binfrqs[bin2] > NUM_HARMONICS*pitch_range_hz[k2] || binfrqs[bin2] < pitch_range_hz[k2]/2){
-              comb_filter[k2][bin2] = 0;
-              sum_filter[k2][bin2] = 0;
-            }
+        var binfrqs = new Float32Array(analyser.frequencyBinCount);
+        var comb_filter = new Float32Array(analyser.frequencyBinCount);
+        var sum_filter = new Float32Array(analyser.frequencyBinCount);
+        var pitchgram = [pitch_range.length];
+        var energy = [pitch_range.length];
+
+        for (var j = 0; j < pitch_range.length; j++){
+        	pitchgram[j] = 0;
+        	energy[j] = 0;
+
+        	for (var w = 0; w < analyser.frequencyBinCount; w++){
+        		binfrqs[w] = w / analyser.fftSize * sr;
+        		comb_filter[w] = 0.5 * Math.cos(2*Math.PI*binfrqs[w]/pitch_range_hz[j])+0.5;
+        		sum_filter[w] = 1;
+        		
+        		if (binfrqs[w] > NUM_HARMONICS*pitch_range_hz[j] || binfrqs[w] < pitch_range_hz[j]/2){
+        			comb_filter[w] = 0;
+              		sum_filter[w] = 0;
+              	}
+              	var spec_power = Math.pow(10,dataArray[w]/10);
+              	// KYSun, Using power and decibel relation, X_dB - 10 * log10(x)
+              	pitchgram[j] += comb_filter[w] * spec_power * spec_power;
+              	energy[j] += sum_filter[w] * spec_power * spec_power;
+              }
           }
-        }
-        var spec_power = dataArray.map(function(num) {
-          return Math.pow(Math.abs(num),2);
-        });
-        
-        for (var a = 0; a < pitchLen; a++){
-          pitchgram[a] = 0;
-          for (var b = 0; b < fftSize/2; b++) {
-            pitchgram[a] += (comb_filter[a][b] * spec_power[b]);
-            energy[a] += (sum_filter[a][b] * spec_power[b]);
-          }
-        }
-        console.log(comb_filter.length);
-      console.log(sum_filter.length);
-        var max_pitchgram = pitchgram[0];
+
+        var max_pitchgram = 0;
         var max_index = 0;
         for (var z = 1; z < pitchgram.length; z++) {
           if (pitchgram[z] > max_pitchgram) {
         max_index = z;
         max_pitchgram = pitchgram[z];
           }
-         }
-        
-        var pitch = pitch_range_hz[max_index];
-      
-		function For_binfrqs(num) {
-            return  0.5 * Math.cos( 2 * Math.PI * num / pitch_range_hz[k]) + 0.5;
-          }
- 
-      
+         }      
+         //console.log(max_pitchgram);
+         //console.log(energy[max_index]);
 
+     	var threshold = 0.987;
+     	// KYSun Comment, Practical threshold value
+     	var HARMONICITY = max_pitchgram/energy[max_index];
+     	//console.log(HARMONICITY);
+
+
+     	// supported by 20090947 최권
 		/////////////////////////////		
 
 		drawContext.font = "30px Arial";
-		if ( 1 )  // THIS SHOULD BE REPLACED WITH THE CONDITIONS FOR HARMONICITY AND ENERGY VALUES 
+		if ( HARMONICITY > threshold || energy[max_index] > Math.pow(10,-7)) 
+		// KYSun Comment, energy might show magnitude of overall sound
+
+		 // THIS SHOULD BE REPLACED WITH THE CONDITIONS FOR HARMONICITY AND ENERGY VALUES 
 		{
-			var detected_pitch_position = pitch;   // THIS SHOULD BE REPLACED WITH DETECTED PITCH FROM THE CODE ABOVE
-			drawContext.strokeText("-- Hz",100,50);
+			var detected_pitch_position = max_index;   // THIS SHOULD BE REPLACED WITH DETECTED PITCH FROM THE CODE ABOVE
+			drawContext.strokeText(Math.floor(pitch_range_hz[max_index])+" Hz",100,50);
 						
 			drawContext.fillStyle = 'rgb(100,0,0)';
 			drawContext.fillRect(detected_pitch_position, 0, 2, HEIGHT);
