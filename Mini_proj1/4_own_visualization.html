@@ -1,0 +1,174 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<title> Audio Visualization </title>
+</head>
+<body>		
+	<h1> Mini Project #1-4: Own Audio Visualization </h1>
+	
+	<input id="fileChooseInput" type="file"></input>
+	<button onclick="playSound(myAudioBuffer)">Play</button>
+	<button onclick="stopSound()">Stop</button>	  
+
+	<p><canvas id='wave_view' style="background: white;"></canvas></p>
+
+	<script>
+
+var context;
+	var myAudioBuffer = null;
+	var analyser;
+	
+	var wave_view;
+	var WIDTH = 512;
+	var HEIGHT = 512;
+	var PITCH_MIN = 36;
+	var PITCH_MAX = 108;
+	var PITCH_STEP = 1;
+	var pitch_range = [];
+	var pitch_range_hz = [];
+	var amp_envelop = 0;
+
+	//
+	window.onload=function(){
+		// file open button
+		var control = document.getElementById("fileChooseInput");
+		control.addEventListener("change", fileChanged, false);
+		
+		// canvas 
+		wave_view = document.getElementById("wave_view");
+		wave_view.width =  WIDTH;
+		wave_view.height = HEIGHT;
+		
+		// create audio context
+		context = new AudioContext();
+		
+		// analyzer
+	    analyser = context.createAnalyser();
+	    analyser.fftSize = 256;
+		analyser.smoothingTimeConstant = 0;
+
+		for (var pitch = PITCH_MIN; pitch <= PITCH_MAX; pitch = pitch + PITCH_STEP) 
+		{
+			pitch_range.push(pitch);
+			pitch_range_hz.push(midi2hertz(pitch));
+		}			
+	};
+
+		function midi2hertz(midi) {
+		var hertz;
+		
+		hertz = Math.pow(2,(midi-69)/12) * 440;
+		
+		return hertz;
+	}
+	
+	function draw_wave(timestamp) {		
+		// 2d canvas context
+		var drawContext = wave_view.getContext('2d');
+		
+		// fill rectangular
+		drawContext.clearRect(0, 0, WIDTH, HEIGHT);
+		drawContext.fillStyle = 'rgb(250, 25000, 250)';
+		drawContext.fillRect(0, 0, WIDTH, HEIGHT);
+
+		// drawing line setting
+		drawContext.lineWidth = 2;
+		drawContext.strokeStyle = 'rgb(0, 0, 0)';
+		// get samples 
+
+		//////////////MY CODE//////////
+
+		// Get TimeDomain Data
+		var dataArray1 = new Float32Array(analyser.frequencyBinCount);
+		analyser.getFloatTimeDomainData(dataArray1);
+
+		// Get Loudness value; same process with proj1-1
+      	var sum = dataArray1.reduce(function(a,b) {return (a + b*b);}, 0); 
+		var power = Math.sqrt(sum/dataArray1.length);
+
+      	var sensitivity = 0.2;
+      	var amp_scale = 200;
+      	var decay_coef = 0.95;
+      	var current_level = amp_scale*Math.log(1.0+1.0/sensitivity*power)/Math.log(1.0+1.0/sensitivity);
+      	if (current_level > amp_envelop){
+        	amp_envelop = current_level;
+      	} else{
+        	amp_envelop = decay_coef * amp_envelop;
+      	}
+      
+		//////////////////////////////
+
+		//////////////////////////////
+		// Get Freq information like proj1-3
+		var dataArray2 = new Float32Array(analyser.frequencyBinCount);
+		analyser.getFloatFrequencyData(dataArray2);
+
+		var midi_power = new Float32Array(pitch_range_hz.length-1);
+
+		var idx = new Float32Array(pitch_range.length-1);
+		for (var i=0; i < pitch_range.length-1; i++){
+			idx[i] = Math.floor(pitch_range_hz[i] * 2 * analyser.frequencyBinCount / context.sampleRate);
+	
+			midi_power[i] = Math.pow(10, dataArray2[idx[i]]/10);
+		}
+
+		index_maxFreq = midi_power.reduce(function(iMax,x,i,a) {return x>a[iMax] ? i : iMax;}, 0);
+		radi = Math.log2(100*(amp_envelop+1));
+
+
+		// use freq value to show color of the circles
+		// and used loudness value on the radius of the circles 
+    for (var i=0;i<10;i++){
+      for (var j=0;j<10;j++){
+      		drawContext.strokeStyle = 'rgb('+Math.floor(10+index_maxFreq/70*250) + ',' + Math.floor(50+index_maxFreq/70*200) + ',' + 
+        Math.floor(150+index_maxFreq/7*150) + ')';
+	        drawContext.stroke();
+        drawContext.beginPath();
+        drawContext.arc(WIDTH/10/2*(2*i+1),WIDTH/10/2*(2*j+1), radi/13 * WIDTH/20  ,0,Math.PI*2,true);
+
+	}
+	}
+
+		
+				 
+		// queue for next callback
+		window.requestAnimationFrame(draw_wave);
+}
+
+	function fileChanged(e){
+		var file = e.target.files[0];
+		var fileReader = new FileReader();
+		fileReader.onload = fileLoaded;
+		fileReader.readAsArrayBuffer(file);
+	}
+
+	function fileLoaded(e){
+	    context.decodeAudioData(e.target.result, function(buffer) {
+	      myAudioBuffer = buffer;
+	    });
+	}
+
+	var source = null;
+	function playSound(anybuffer) {
+	  source = context.createBufferSource();
+	  source.buffer = anybuffer;
+	  source.connect(context.destination);
+	  
+	  // connect source to analyser
+	  source.connect(analyser);
+	  
+	  source.start();
+	  
+	  // visualize audio
+	  draw_wave();
+	}
+
+	function stopSound() {
+	  if (source) {
+	    source.stop();
+	  }
+	}	 
+
+	</script>
+</body>
+</html>  	
