@@ -259,28 +259,28 @@
 
 		var own_params = {
 		presetName: "own_sound",
-		carrierModulationRatio: 1,
-		modulationIndex: 1,
-		IndexAttackTime: 1,
-		IndexDecayTime: 1,
-		IndexSustainLevel: 0,
-		IndexReleaseTime: 1,
-		AmpEnvAttackTime: 1,
-		AmpEnvDecayTime: 1,
-		AmpEnvSustainLevel: 0,
-		AmpEnvReleaseTime: 1,
-		FilterFreq: 5000,
-		FilterFreqTarget: 2000,
-		FilterFreqDecayTime: 5
+		carrierModulationRatio: 4,
+		modulationIndex: 100,
+		IndexAttackTime: 5,
+		IndexDecayTime: 5,
+		IndexSustainLevel: 1,
+		IndexReleaseTime: 0.01,
+		AmpEnvAttackTime: 2,
+		AmpEnvDecayTime: 5,
+		AmpEnvSustainLevel: 0.001,
+		AmpEnvReleaseTime: 2,
+		FilterFreq: 3000,
+		FilterFreqTarget: 1000,
+		FilterFreqDecayTime: 2
 	};
 
 
 	// add presets
 	var presets = [];
+	presets.push(own_params);
 	presets.push(brass_params);
 	presets.push(ep_params);
 	presets.push(bell_params);
-	presets.push(own_params);
 
 	
 	var synth;
