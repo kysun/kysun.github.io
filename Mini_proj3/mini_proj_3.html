@@ -36,7 +36,7 @@
     keyboard = new QwertyHancock(settings);
 	
 ///////////////////////////////////////////
-	// Reverberation effect
+	// KYSUN : Reverberation effect
 	// convolver
 	var reverb_types = [
 		"sample1.wav",
@@ -80,8 +80,7 @@
 	  this.carrierOsc.connect(this.carrierOscGain);
 	  this.carrierOscGain.connect(this.lowpassfilter);
 
-//////////////////////////////////////////////////////////
-	  /// connect to reverb, convolver
+	  /// KYSUN : connect to reverb, convolver
 	  this.lowpassfilter.connect(reverb_onoff)
 
 	  if (!reverb_bypass){
@@ -95,7 +94,6 @@
 		else{
 		reverb_onoff.connect(context.destination);
 		}
-//////////////////////////////////////////////////////////
 
 	  // preset parameters 
 	  this.modulationIndex = parameters.modulationIndex;
@@ -109,7 +107,7 @@
 	  this.AmpEnvSustainLevel = parameters.AmpEnvSustainLevel;
 	  this.AmpEnvReleaseTime = parameters.AmpEnvReleaseTime;
 
-	  // preset parameter addition
+	  // KYSUN : preset parameter addition
 	  this.FilterFreq = parameters.FilterFreq;
 	  this.FilterFreqTarget = parameters.FilterFreqTarget;
 	  this.FilterFreqDecayTime = parameters.FilterFreqDecayTime;
@@ -215,7 +213,7 @@
 		AmpEnvSustainLevel: 0.9,
 		AmpEnvReleaseTime: 0.5,
 		
-		// parameter setting
+		// KYSUN : parameter setting
 		FilterFreq: 2000,
 		FilterFreqTarget: 500,
 		FilterFreqDecayTime: 0.5
@@ -235,13 +233,13 @@
 		AmpEnvSustainLevel: 0.001,
 		AmpEnvReleaseTime: 0.1,
 
-		// parameter setting
+		// KYSUN : parameter setting
 		FilterFreq: 2000,
 		FilterFreqTarget: 500,
 		FilterFreqDecayTime: 0.5
 	};
 
-	// Adding a new preset: bell sound
+	// KYSUN : Adding a new preset: bell sound
 	var bell_params = {
 		presetName: "Bell",
 		carrierModulationRatio: 1/1.4,
@@ -259,11 +257,34 @@
 		FilterFreqDecayTime: 5
 	};
 
+		var own_params = {
+		presetName: "own_sound",
+		carrierModulationRatio: 1/1.4,
+		modulationIndex: 2,
+		IndexAttackTime: 0.0,
+		IndexDecayTime: 10,
+		IndexSustainLevel: 0.001,
+		IndexReleaseTime: 3,
+		AmpEnvAttackTime: 0.0,
+		AmpEnvDecayTime: 10,
+		AmpEnvSustainLevel: 0.001,
+		AmpEnvReleaseTime: 3,
+		FilterFreq: 5000,
+		FilterFreqTarget: 2000,
+		FilterFreqDecayTime: 5
+	};
+
+
+
+
+
+
 	// add presets
 	var presets = [];
 	presets.push(brass_params);
 	presets.push(ep_params);
 	presets.push(bell_params);
+	presets.push(own_params);
 
 	
 	var synth;
@@ -280,7 +301,7 @@
 		presetSelect.addEventListener("change", changePreset, false);
 		
 
-	// select a room impulse response
+	// KYSUN : select a room impulse response
 		var reverbSelect = document.getElementById("reverbDropdown");
 		for (var i in reverb_types) {
 			var option = document.createElement("option");
@@ -337,11 +358,9 @@
 		synth.noteOff(getMIDINumOfNote(note));
     };
 
-
-///////////////////////////////////////////
 ///////////////////////////////////////////
 
-// jQuery-based knob control setting (Reverb)
+// KYSUN : jQuery-based knob control setting (Reverb)
 	$(function() {
 		$( ".reverb_wet_dry_ratio" ).knob({
 			change: function (value) {
@@ -355,16 +374,15 @@
 	});
 
 	///////////////////////////////////////////
-	// event handlers
+	// KYSUN : event handlers
 	///////////////////////////////////////////
 	function changeReverbType(e){
 		var reverbName = e.target.value;		
 		reverb_params.type = reverbName;		
 		updateReverb(); 		
 	}
-	// update convolver parameters
+	// KYSUN : update convolver parameters
 	function updateReverb() { 	
-		// update filter parameters
 		dryGain.gain.value = 1-reverb_params.wetdryRatio;
 		wetGain.gain.value = reverb_params.wetdryRatio;
 		
@@ -372,7 +390,7 @@
 	}	
 
 	///////////////////////////////////////////
-	//load impulse response
+	//KYSUN : load impulse response
 	function loadImpulseResponse(type) {
 		var request = new XMLHttpRequest();
 		var url = type; //"memchu_ir2.wav";
@@ -386,7 +404,7 @@
 	  request.send();
 	}
 
-	// make onoff switch for bypass
+	// KYSUN : make onoff switch for bypass
 	var reverb_onoff = context.createGain();
 	reverb_onoff.gain = 1;
 
@@ -416,7 +434,7 @@
 			<input class="reverb_wet_dry_ratio" data-width="80" data-angleOffset=-125 data-angleArc=250 data-fgColor="#222" value="0.2" >
 		</div>
 	</div>
-	
+
 </body>
 
 </html>
